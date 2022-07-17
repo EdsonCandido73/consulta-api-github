@@ -1,0 +1,28 @@
+.searchUser h1 {
+  font-size: 2em;
+  margin-top: 2em;
+  margin-bottom: 5em;
+}
+
+.inputUser form {
+  display: flex;
+  align-items: center;
+  justify-content: space-around ;
+  padding: 40px;
+  background-color: #89bbe7;  
+}
+
+.inputUser TextField {  
+  width: 50px;
+  font-size: 16px;
+  text-align: center;   
+}
+
+.textField {
+  background-color: #cbe4fa;  
+}
+
+
+
+
+

@@ -70,7 +70,7 @@ const SearchUser = () => {
           </Button>
           
         </form>
-        {userData.avatar_url && (
+        {userData?.avatar_url && (
             <img
               src={userData.avatar_url}              
               alt={userData.name}

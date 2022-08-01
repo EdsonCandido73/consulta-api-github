@@ -95,7 +95,7 @@ const SearchUser = () => {
           </Grid>
         </form>
       </Box>
-      <UserProfile userData={userData} reposList={reposList} />
+      <UserProfile userData={userData} originalReposList={reposList} />
     </Container>
   );
 };

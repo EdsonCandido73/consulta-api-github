@@ -1,10 +1,11 @@
-import Button from "@mui/material/Button";
+import { useEffect, useState } from "react";
 
-import Card from "@mui/material/Card";
 import Search from "@mui/icons-material/Search";
-
 import {
+  Avatar,
   Box,
+  Button,
+  Card,
   CardContent,
   Checkbox,
   FormControlLabel,
@@ -17,22 +18,100 @@ import {
 } from "@mui/material";
 
 import moment from "moment";
-import { Avatar } from "@mui/material";
 import { IReposList, IUserData } from "../SearchUser/Types";
-import { useState } from "react";
 
 interface IUserProfile {
   userData: IUserData;
-  reposList: IReposList[];
+  originalReposList: IReposList[];
 }
 
-export const UserProfile = ({ userData, reposList }: IUserProfile) => {
+export const UserProfile = ({ userData, originalReposList }: IUserProfile) => {
   const [searchString, setSearchString] = useState("");
-  const [orderBy, setOrdeBy] = useState("");
+  const [orderBy, setOrdeBy] = useState("name");
+  const [reposList, setReposList] = useState<IReposList[]>([]);
+  const [sortedReposList, setSortedReposList] = useState<IReposList[]>([]);  
+  const [clean, setClean] = useState(false);
+  const [filterByArchived, setFilterByArchived] = useState(false);
+  const [filterByIssues, setFilterByIssues] = useState(false);
+  const [filterByStars, setFilterByStars] = useState(false);
 
   const handleRadioChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setOrdeBy((event.target as HTMLInputElement).value);
+    setOrdeBy((event.target as HTMLInputElement).value)
+    handleOrderRepos((event.target as HTMLInputElement).value);
   };
+
+  const handleOrderRepos = (sortKey: string) => {
+    
+    if (reposList.length > 0) {      
+      if (sortKey === "name") {
+        setSortedReposList(reposList.sort((a, b) => {
+          return a.name.toLowerCase() < b.name.toLowerCase() ? -1 
+          : a.name.toLowerCase() > b.name.toLowerCase() ? 1 : 0;
+        }))          
+      }
+      if (sortKey === "create") {
+        setSortedReposList(reposList.sort((a, b) => {
+          return a.created_at < b.created_at ? -1
+            : a.created_at > b.created_at ? 1 : 0;
+        }))          
+      }
+      if (sortKey === "update") {
+        setSortedReposList(reposList.sort((a, b) => {
+          return a.updated_at < b.updated_at ? -1
+            : a.updated_at > b.updated_at ? 1 : 0;
+        }))          
+      }
+    }
+  };
+
+  const handleClickSearch = () => {
+    setReposList(
+      originalReposList?.filter(
+        (repo) =>
+          (repo.description
+            ?.toLowerCase()
+            .includes(searchString?.toLowerCase()) ||
+          repo.language?.toLowerCase().includes(searchString?.toLowerCase()) ||
+          repo.name?.toLowerCase().includes(searchString?.toLowerCase())) &&
+          (!filterByArchived || (filterByArchived && repo.archived === true)) &&
+          (filterByStars ? repo.stargazers_count > 0 : repo.stargazers_count >= 0) &&
+          (filterByIssues ? repo.open_issues_count > 0 : repo.open_issues_count >= 0)
+      )
+    );
+  };
+
+  const handleClickClear = () => {
+    setSearchString("");
+    setOrdeBy("name");
+    setFilterByArchived(false);
+    setFilterByIssues(false);
+    setFilterByStars(false);
+    setClean(true);
+  };
+
+  useEffect(() => {
+    setReposList(originalReposList);
+  }, [originalReposList]);
+
+  useEffect(() => {
+    setReposList(sortedReposList);
+  }, [sortedReposList]);  
+  
+  useEffect(() => {
+    if (clean) {
+      handleClickSearch();
+      setClean(false);
+    }
+  }, [clean]);
+
+  useEffect(() => {
+    handleClickSearch();
+    console.log(reposList);
+    console.log(filterByArchived);
+    console.log(filterByIssues);
+    console.log(filterByStars);
+    console.log(orderBy);
+  }, [filterByArchived, filterByIssues, filterByStars]);
 
   return (
     userData &&
@@ -58,7 +137,7 @@ export const UserProfile = ({ userData, reposList }: IUserProfile) => {
                 fullWidth
                 value={searchString}
                 placeholder="Pesquisar por..."
-                label="Pesquisa"
+                label="Pesquisa por (nome, descrição e linguagem)"
               />
             </Grid>
             <Grid item xs={3}>
@@ -68,6 +147,7 @@ export const UserProfile = ({ userData, reposList }: IUserProfile) => {
                 sx={{ height: "50px" }}
                 variant="contained"
                 color="inherit"
+                onClick={() => handleClickSearch()}
               >
                 <Search />
               </Button>
@@ -77,6 +157,7 @@ export const UserProfile = ({ userData, reposList }: IUserProfile) => {
                 sx={{ height: "50px", marginLeft: "20px" }}
                 variant="contained"
                 color="inherit"
+                onClick={() => handleClickClear()}
               >
                 Limpar
               </Button>
@@ -90,7 +171,11 @@ export const UserProfile = ({ userData, reposList }: IUserProfile) => {
               </Typography>
             </Grid>
             <Grid item xs={0.4}>
-              <Checkbox />
+              <Checkbox
+                value={filterByArchived}
+                onClick={() => setFilterByArchived(!filterByArchived)}
+                checked={filterByArchived}
+              />
             </Grid>
             <Grid item xs={1.6}>
               <Typography variant="body1" component="div">
@@ -98,7 +183,11 @@ export const UserProfile = ({ userData, reposList }: IUserProfile) => {
               </Typography>
             </Grid>
             <Grid item xs={0.4}>
-              <Checkbox />
+              <Checkbox
+                value={filterByIssues}
+                onClick={() => setFilterByIssues(!filterByIssues)}
+                checked={filterByIssues}
+              />
             </Grid>
             <Grid item xs={1.6}>
               <Typography variant="body1" component="div">
@@ -106,7 +195,11 @@ export const UserProfile = ({ userData, reposList }: IUserProfile) => {
               </Typography>
             </Grid>
             <Grid item xs={0.4}>
-              <Checkbox />
+              <Checkbox
+                value={filterByStars}
+                onClick={() => setFilterByStars(!filterByStars)}
+                checked={filterByStars}
+              />
             </Grid>
             <Grid item xs={1.6}>
               <Typography variant="body1" component="div">
@@ -123,23 +216,23 @@ export const UserProfile = ({ userData, reposList }: IUserProfile) => {
             </Grid>
             <Grid item xs={7}>
               <RadioGroup value={orderBy} onChange={handleRadioChange} row>
-                <FormControlLabel
+              <FormControlLabel
                   value="name"
                   control={<Radio />}
                   label="Nome"
-                  sx={{marginLeft: "3px"}}
+                  sx={{ marginLeft: "3px" }}
                 />
                 <FormControlLabel
                   value="create"
                   control={<Radio />}
                   label="Data criação"
-                  sx={{marginLeft: "15px"}}
-                />
+                  sx={{ marginLeft: "15px" }}
+                />                
                 <FormControlLabel
                   value="update"
                   control={<Radio />}
                   label="Último commit"
-                  sx={{marginLeft: "15px"}}
+                  sx={{ marginLeft: "15px" }}
                 />
               </RadioGroup>
             </Grid>
@@ -155,7 +248,7 @@ export const UserProfile = ({ userData, reposList }: IUserProfile) => {
             border: "1px solid lightgrey ",
           }}
         >
-          <Grid container alignItems="center" spacing={2}>
+          <Grid container alignItems="center" spacing={2} marginBottom={2}>
             <Grid marginRight={1} item xs={1}>
               {userData?.avatar_url ? (
                 <Avatar
@@ -212,8 +305,9 @@ export const UserProfile = ({ userData, reposList }: IUserProfile) => {
                         variant="h5"
                         fontWeight="bold"
                         component="div"
+                        marginBottom={1}
                       >
-                        {`Nome: ${repos.name}`}
+                        {repos.name}
                       </Typography>
                       <Typography variant="body1" component="div">
                         {`Descrição: ${repos.description || ""}`}
